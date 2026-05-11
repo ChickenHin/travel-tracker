@@ -1,0 +1,14 @@
+azure-ai-documentintelligence==1.0.2
+azure-core==1.40.0
+azure-cosmos==4.15.0
+azure-functions==1.24.0
+azure-servicebus==7.14.3
+certifi==2026.4.22
+charset-normalizer==3.4.7
+idna==3.13
+isodate==0.7.2
+MarkupSafe==3.0.3
+requests==2.33.1
+typing_extensions==4.15.0
+urllib3==2.6.3
+Werkzeug==3.1.8
