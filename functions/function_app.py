@@ -51,22 +51,42 @@ from azure.servicebus import ServiceBusClient, ServiceBusMessage
 app = func.FunctionApp()
 
 # Document intelligence
-di_endpoint = os.environ["DOC_INTELLIGENCE_ENDPOINT"]
-di_key = os.environ["DOC_INTELLIGENCE_KEY"]
-di_client = DocumentIntelligenceClient(di_endpoint, AzureKeyCredential(di_key))
+di_client = None
+
+def get_di_client():
+    global di_client
+    if di_client is None:
+        di_client = DocumentIntelligenceClient(
+            os.environ["DOC_INTELLIGENCE_ENDPOINT"],
+            AzureKeyCredential(os.environ["DOC_INTELLIGENCE_KEY"])
+        )
+    return di_client
 
 # DB
-cosmos_client = CosmosClient(
-    os.environ["COSMOS_ENDPOINT"],
-    credential=os.environ["COSMOS_KEY"]
-)
-database = cosmos_client.get_database_client(os.environ["COSMOS_DATABASE"])
-container = database.get_container_client(os.environ["COSMOS_CONTAINER"])
+cosmos_container = None
+
+def get_container():
+    global cosmos_container
+    if cosmos_container is None:
+        client = CosmosClient(
+            os.environ["COSMOS_ENDPOINT"],
+            credential=os.environ["COSMOS_KEY"]
+        )
+        db = client.get_database_client(os.environ["COSMOS_DATABASE"])
+        cosmos_container = db.get_container_client(os.environ["COSMOS_CONTAINER"])
+    return cosmos_container
 
 # Event bus
-sb_client = ServiceBusClient.from_connection_string(
-    os.environ["SERVICE_BUS_CONNECTION"]
-)
+sb_client = None
+
+def get_sb_client():
+    global sb_client
+    if sb_client is None:
+        sb_client = ServiceBusClient.from_connection_string(
+            os.environ["SERVICE_BUS_CONNECTION"]
+        )
+    return sb_client
+
 sb_queue = os.environ["SERVICE_BUS_QUEUE"]
 
 @app.route(route="parse_receipt", auth_level=func.AuthLevel.FUNCTION, methods=["POST"])
@@ -85,7 +105,7 @@ def parse_receipt(req: func.HttpRequest) -> func.HttpResponse:
     
     # get oct result of receipt from model
     try:
-        di_resp = di_client.begin_analyze_document(
+        di_resp = get_di_client().begin_analyze_document(
             model_id="prebuilt-receipt",
             body=receipt_req,
             content_type="application/octet-stream"
@@ -171,7 +191,7 @@ def save_review(req: func.HttpRequest) -> func.HttpResponse:
 
     # insert to db
     try:
-        container.create_item(body=review)
+        get_container().create_item(body=review)
     except exceptions.CosmosHttpResponseError as e:
         logging.error(f"Cosmos DB error: {e}")
         return func.HttpResponse(
@@ -203,6 +223,7 @@ def get_summary(req: func.HttpRequest) -> func.HttpResponse:
     
     try:
         query = "SELECT * FROM reviews r "
+        params = [{}]
         if city_filter:
             query += "WHERE r.city = @city"
             params = [{"name": "@city", "value": city_filter}]
@@ -214,13 +235,13 @@ def get_summary(req: func.HttpRequest) -> func.HttpResponse:
             params = [{"name": "@from_date", "value": from_date}, {"name": "@to_date", "value": to_date}]
         
         if city_filter:
-            items = list(container.query_items(
+            items = list(get_container().query_items(
                 query=query,
                 parameters=params,
                 partition_key=city_filter
             ))
         else:
-            items = list(container.query_items(
+            items = list(get_container().query_items(
                 query=query,
                 parameters=params,
                 enable_cross_partition_query=True
@@ -337,6 +358,7 @@ def extract_receipt_info(oct_result) -> dict:
     total = get_field_value(fields.get("Total"))
     currency = get_field_value(fields.get("CurrencyCode")) or "EUR"
     city = get_field_value(fields.get("MerchantAddress"))
+    country = get_field_value(fields.get("CountryRegion"))
     visit_date = get_field_value(fields.get("TransactionDate"))
     dishes = []
     items = fields.get("Items")
@@ -357,12 +379,13 @@ def extract_receipt_info(oct_result) -> dict:
                 })
 
     google_place_info = get_google_places(merchant_name, city)
+    logging.info(f"=============== google resp: {google_place_info}")
 
     return {
         "merchant": {
             "name": merchant_name or "Unknown",
             "city": city or google_place_info["city"],       
-            "country": google_place_info["country"],
+            "country": country or google_place_info["country"],
             "address": google_place_info["address"],
             "place_id": google_place_info["place_id"],
             "google_rating": google_place_info["google_rating"],
@@ -392,6 +415,9 @@ def get_field_value(field):
     
     if hasattr(field, "value_address") and field.value_address:
         return str(field.value_address.city)
+    
+    if hasattr(field, "value_country_region") and field.value_country_region:
+        return str(field.value_country_region)
     
     if hasattr(field, "content") and field.content:
         return field.content
@@ -468,7 +494,7 @@ def get_google_places(merchant_name: str, city: str) -> dict:
 
 def emit_event(review: dict):
     try:
-        with sb_client.get_queue_sender(sb_queue) as sender:
+        with get_sb_client().get_queue_sender(sb_queue) as sender:
             message = ServiceBusMessage(json.dumps(review))
             sender.send_messages(message)
         logging.info(f"Emit event for review {review['id']}")
