@@ -1,0 +1,32 @@
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--cov=functions",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+]
+markers = [
+    "unit: mock external services, and test each api",
+    "integration: test continous invoke of all apis"
+]
+
+[tool.coverage.run]
+source = ["functions"]
+omit = [
+    "tests/*",
+    "functions/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

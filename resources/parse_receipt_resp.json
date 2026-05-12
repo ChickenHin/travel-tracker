@@ -1,0 +1,19 @@
+{
+  "merchant": {
+    "name": "La Cabaña",
+    "address": "738 Rose Ave",
+    "city": "Venice",
+    "country": "USA",
+    "google_rating": 4.4,
+    "google_review_count": 929,
+    "place_id": "ChIJc2JTRcO6woARZYR4EjVcAYs"
+  },
+  "dishes": [
+    { "name": "Dos Tacos (Brunch)", "price": 18.0 },
+    { "name": "Super Combo", "price": 21.95 },
+    { "name": "Lime Margarita", "price": 12.75 }
+  ],
+  "total": 57.71,
+  "currency": "USD",
+  "visit_date": "2026-05-12"
+}

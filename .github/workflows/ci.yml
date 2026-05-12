@@ -6,34 +6,28 @@ on:
   pull_request:
     branches: ["main"]
 
-env:      
-  PYTHON_VERSION: '3.14'                     
+env:
+  PYTHON_VERSION: "3.14"
 
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
     steps:
-    - name: 'Checkout code'
-      uses: actions/checkout@v4
+      - name: "Checkout code"
+        uses: actions/checkout@v4
 
-    - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
+      - name: Setup Python ${{ env.PYTHON_VERSION }} Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
 
-    - name: 'Resolve Project Dependencies Using Pip'
-      working-directory: functions
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install ruff pytest
-      
-    - name: 'Run tests'
-      working-directory: functions
-      run: |
-        if [ -d "../tests" ]; then
-          pytest ../tests
-        else
-          echo "No tests directory found, skipping tests"
-        fi 
+      - name: "Resolve Project Dependencies Using Pip"
+        working-directory: functions
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: "Run tests"
+        run: pytest
