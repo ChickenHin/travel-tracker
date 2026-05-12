@@ -33,6 +33,7 @@ export interface ReviewReq {
   total: number;
   currency: string;
   visit_date: string | null;
+  participant_count: number;
 }
 
 export interface ReviewResp {

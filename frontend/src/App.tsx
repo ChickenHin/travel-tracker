@@ -10,24 +10,25 @@ const App = () => {
     null,
   );
 
-  const handleSaved = () => {
-    setParsedReceipt(null);
-  };
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">🍽️ Restaurant Tracker</h1>
-      <p className="text-muted-foreground mb-8">
-        Upload a receipt, rate it, and get recommendations.
-      </p>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Restaurant Tracker</h1>
+        <p className="text-muted-foreground">
+          Upload a receipt, rate it, and get friend-ready recommendations.
+        </p>
+      </header>
 
-      <ReceiptUpload onParsed={setParsedReceipt} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <ReceiptUpload onParsed={setParsedReceipt} />
+          {parsedReceipt && <ReviewForm parsedReceipt={parsedReceipt} />}
+        </div>
 
-      {parsedReceipt && (
-        <ReviewForm parsedReceipt={parsedReceipt} onSaved={handleSaved} />
-      )}
-
-      <Summary />
+        <div>
+          <Summary />
+        </div>
+      </div>
     </div>
   );
 };

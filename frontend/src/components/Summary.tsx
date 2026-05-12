@@ -42,7 +42,7 @@ const Summary = () => {
     return "destructive";
   };
 
-  const getRestaurants = (city: CitySummary): Summary[] => {
+  const getMerchants = (city: CitySummary): Summary[] => {
     return city.merchants || [];
   };
 
@@ -85,9 +85,9 @@ const Summary = () => {
 
         {data && (
           <div>
-            <p className="text-sm text-muted-foreground mb-4">
+            {/* <p className="text-sm text-muted-foreground mb-4">
               Found {data.total_reviews} reviews
-            </p>
+            </p> */}
 
             {data.countries.length === 0 ? (
               <p className="text-muted-foreground">No reviews found.</p>
@@ -102,7 +102,7 @@ const Summary = () => {
                       <h4 className="text-sm font-medium text-muted-foreground mb-2">
                         📍 {city.city}
                       </h4>
-                      {getRestaurants(city).map((r, i) => {
+                      {getMerchants(city).map((r, i) => {
                         const rating = r.my_rating ?? 0;
                         return (
                           <div

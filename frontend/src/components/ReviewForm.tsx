@@ -18,16 +18,16 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ReviewFormProps {
   parsedReceipt: ParseReceiptResp;
-  onSaved: () => void;
 }
 
-const ReviewForm = ({ parsedReceipt, onSaved }: ReviewFormProps) => {
+const ReviewForm = ({ parsedReceipt }: ReviewFormProps) => {
   const [merchant] = useState<Merchant>(parsedReceipt.merchant);
   const [dishes, setDishes] = useState<DishWithReview[]>(
     parsedReceipt.dishes.map((d) => ({ ...d, dish_rating: 0, dish_note: "" })),
   );
   const [myRating, setMyRating] = useState(0);
   const [myNote, setMyNote] = useState("");
+  const [participantCount, setParticipantCount] = useState(0);
   const [total, setTotal] = useState(parsedReceipt.total);
   const [currency, setCurrency] = useState(parsedReceipt.currency);
   const [visitDate, setVisitDate] = useState(
@@ -57,6 +57,14 @@ const ReviewForm = ({ parsedReceipt, onSaved }: ReviewFormProps) => {
       return;
     }
 
+    if (!participantCount) {
+      setStatus({
+        type: "error",
+        message: "Participant count cannot be empty",
+      });
+      return;
+    }
+
     setLoading(true);
     setStatus({ type: "info", message: "Saving..." });
 
@@ -69,9 +77,9 @@ const ReviewForm = ({ parsedReceipt, onSaved }: ReviewFormProps) => {
         total: total,
         currency,
         visit_date: visitDate,
+        participant_count: participantCount,
       });
       setStatus({ type: "success", message: `✅ Saved (id: ${result.id})` });
-      onSaved();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setStatus({ type: "error", message: `❌ ${message}` });
@@ -106,7 +114,7 @@ const ReviewForm = ({ parsedReceipt, onSaved }: ReviewFormProps) => {
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="myNote">Your Note</Label>
+          <Label htmlFor="myNote">My Note</Label>
           <Textarea
             id="myNote"
             rows={2}
@@ -117,25 +125,24 @@ const ReviewForm = ({ parsedReceipt, onSaved }: ReviewFormProps) => {
 
         <div className="space-y-1">
           <Label>Dishes</Label>
-          <div className="space-y-2">
+          <div className="space-y-4 divide-y">
             {dishes.map((dish, i) => (
-              <div
-                key={i}
-                className="grid grid-cols-[2fr_1fr_auto_2fr] gap-2 items-center"
-              >
-                <Input
-                  value={dish.name}
-                  onChange={(e) => updateDishName(i, e.target.value)}
-                  placeholder="Dish name"
-                />
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={dish.price}
-                  onChange={(e) =>
-                    updateDishPrice(i, parseFloat(e.target.value) || 0)
-                  }
-                />
+              <div key={i} className="space-y-2 py-5">
+                <div className="grid grid-cols-[2fr_1fr] gap-2">
+                  <Input
+                    value={dish.name}
+                    onChange={(e) => updateDishName(i, e.target.value)}
+                    placeholder="Dish name"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={dish.price}
+                    onChange={(e) =>
+                      updateDishPrice(i, parseFloat(e.target.value) || 0)
+                    }
+                  />
+                </div>
                 <StarRating
                   value={dish.dish_rating ?? 0}
                   onChange={(v) => updateDishRating(i, v)}
@@ -167,6 +174,15 @@ const ReviewForm = ({ parsedReceipt, onSaved }: ReviewFormProps) => {
               id="currency"
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="participantCount">Participant Count</Label>
+            <Input
+              id="participantCount"
+              type="number"
+              value={participantCount}
+              onChange={(e) => setParticipantCount(parseInt(e.target.value))}
             />
           </div>
         </div>
