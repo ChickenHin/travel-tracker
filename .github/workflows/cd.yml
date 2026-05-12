@@ -20,18 +20,18 @@ name: Deploy to Azure Function
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'functions/**'
   workflow_dispatch:
 
-env:
-  AZURE_FUNCTIONAPP_NAME: 'fn-travel-tracker'   # set this to your function app name on Azure
-  AZURE_RESOURCE_GROUP: travel-tracker
-  PYTHON_VERSION: '3.14'                     # set this to the python version to use (e.g. '3.6', '3.7', '3.8')
-
 jobs:
-  build-and-deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'functions/') || github.event_name == 'workflow_dispatch'
+    
+    env:
+      AZURE_FUNCTIONAPP_NAME: 'fn-travel-tracker'   # set this to your function app name on Azure
+      AZURE_RESOURCE_GROUP: travel-tracker
+      PYTHON_VERSION: '3.14'                     # set this to the python version to use (e.g. '3.6', '3.7', '3.8')
+      
     steps:
     - name: 'Checkout GitHub Action'
       uses: actions/checkout@v4
@@ -61,3 +61,26 @@ jobs:
       working-directory: functions
       run: |
         func azure functionapp publish ${{ env.AZURE_FUNCTIONAPP_NAME }} --python
+        
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'frontend/') || github.event_name == 'workflow_dispatch'
+
+    env:
+      VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+      VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          
+    steps:
+    - name: 'Checkout GitHub Action'
+      uses: actions/checkout@v4
+      with:
+          submodules: false
+
+    - name: 'Deploy to Static Web Apps'
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        action: 'upload'
+        app_location: 'frontend'
+        output_location: 'dist'
