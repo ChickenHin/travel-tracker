@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ReceiptUpload from "@/components/ReceiptUpload";
 import ReviewForm from "@/components/ReviewForm";
-import Summary from "@/components/Summary";
+import SummaryView from "@/components/SummaryView";
 import type { ParseReceiptResp } from "@/types";
 import "./App.css";
 
@@ -26,7 +26,7 @@ const App = () => {
         </div>
 
         <div>
-          <Summary />
+          <SummaryView />
         </div>
       </div>
     </div>

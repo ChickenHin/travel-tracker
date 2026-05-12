@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import type { SummaryResp, Summary, CitySummary } from "@/types";
 
-const Summary = () => {
+const SummaryView = () => {
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
   const [data, setData] = useState<SummaryResp | null>(null);
@@ -162,4 +162,4 @@ const Summary = () => {
   );
 };
 
-export default Summary;
+export default SummaryView;
