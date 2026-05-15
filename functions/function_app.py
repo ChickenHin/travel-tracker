@@ -221,18 +221,31 @@ def get_summary(req: func.HttpRequest) -> func.HttpResponse:
     from_date = req.params.get("from") 
     to_date = req.params.get("to") 
     
+    where_clauses = []
+    params = []
+
+    if city_filter:
+        where_clauses.append("r.city = @city")
+        params.append({"name": "@city", "value": city_filter})
+    if country_filter:
+        where_clauses.append("r.merchant.country = @country")
+        params.append({"name": "@country", "value": country_filter})
+    if from_date:
+        where_clauses.append("r.visit_date >= @from_date")
+        params.append({"name": "@from_date", "value": from_date})
+
+    if to_date:
+        where_clauses.append("r.visit_date < @to_date")
+        params.append({"name": "@to_date", "value": to_date})
+    
+    query = "SELECT * FROM reviews r"
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+
+    logging.info(f"DB query: {query}")
+    logging.info(f"DB params: {params}")
+    
     try:
-        query = "SELECT * FROM reviews r "
-        params = [{}]
-        if city_filter:
-            query += "WHERE r.city = @city"
-            params = [{"name": "@city", "value": city_filter}]
-        if country_filter:
-            query += "WHERE r.merchant.country = @country"
-            params = [{"name": "@country", "value": country_filter}]
-        if from_date and to_date:
-            query += "WHERE r.visit_date >= @from_date AND r.visit_date < @to_date"
-            params = [{"name": "@from_date", "value": from_date}, {"name": "@to_date", "value": to_date}]
         
         if city_filter:
             items = list(get_container().query_items(

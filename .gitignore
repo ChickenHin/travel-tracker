@@ -58,3 +58,6 @@ __azurite_db*__.json
 frontend/node_modules/
 frontend/dist/
 frontend/*.local
+
+# test coverage
+.coverage
